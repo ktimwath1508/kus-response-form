@@ -12,7 +12,7 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Sarabun,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6}
 .wrap{max-width:640px;margin:0 auto;padding:16px 16px 60px}
-header{background:var(--accent);color:#fff;padding:18px 16px;text-align:center}
+header{position:relative;background:var(--accent);color:#fff;padding:18px 16px;text-align:center}
 header h1{margin:0;font-size:21px;font-weight:700}
 header p{margin:2px 0 0;opacity:.85;font-size:15px}
 .card{background:var(--card);border-radius:14px;padding:18px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -63,7 +63,8 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
 </head>
 <body>
 <header>
-  <h1>ใบตอบรับ ค่าชุดงานประจำปี 2569</h1>
+  <a href="summary.html" style="position:absolute;right:12px;top:12px;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px">👩‍🏫 สำหรับอาจารย์</a>
+  <h1 style="margin-top:22px">ใบตอบรับ ค่าชุดงานประจำปี 2569</h1>
   <p>ผู้ปกครองระดับชั้นประถมศึกษาปีที่ 4</p>
 </header>
 <div class="wrap">
@@ -176,6 +177,7 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
   <button class="secondary" id="dlBtn" type="button">⬇️ บันทึกรูป JPG</button>
   <div class="warn">ถ้ากดปุ่มแล้วไม่ทำงาน (มักเกิดในเบราว์เซอร์ของไลน์) ให้<b>กดค้างที่รูป → บันทึกรูปภาพ</b> แล้วส่งในไลน์ตามปกติ</div>
   <button class="secondary" id="editBtn" type="button">✏️ แก้ไขข้อมูล</button>
+  <p class="hint" style="margin-top:10px">ถ้าภายหลังต้องการเปลี่ยนไซส์ ให้เข้าลิงก์นี้แล้วกรอกใหม่ด้วย <b>ห้องและเลขที่เดิม</b> ระบบจะใช้ข้อมูลล่าสุดแทนของเดิมให้อัตโนมัติ แล้วส่งรูปใหม่ให้อาจารย์</p>
 </div>
 
 </div>
