@@ -63,8 +63,7 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
 </head>
 <body>
 <header>
-  <a href="summary.html" style="position:absolute;right:12px;top:12px;background:#fff;color:#4b2a86;border:1.5px solid #cbbfe0;text-decoration:none;font-size:15px;font-weight:700;padding:7px 14px;border-radius:10px">📊 สำหรับอาจารย์ (ดูสรุป)</a>
-  <h1 style="margin-top:34px">ใบตอบรับ ค่าชุดงานประจำปี 2569</h1>
+  <h1>ใบตอบรับ ค่าชุดงานประจำปี 2569</h1>
   <p>ผู้ปกครองระดับชั้นประถมศึกษาปีที่ 4</p>
 </header>
 <div class="wrap">
@@ -179,6 +178,12 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
   <button class="secondary" id="editBtn" type="button">✏️ แก้ไขข้อมูล</button>
   <p class="hint" style="margin-top:10px">ถ้าภายหลังต้องการเปลี่ยนไซส์ ให้เข้าลิงก์นี้แล้วกรอกใหม่ด้วย <b>ห้องและเลขที่เดิม</b> ระบบจะใช้ข้อมูลล่าสุดแทนของเดิมให้อัตโนมัติ แล้วส่งรูปใหม่ให้อาจารย์</p>
 </div>
+
+<a href="summary.html" class="card" style="display:flex;align-items:center;gap:12px;margin-top:28px;text-decoration:none;color:var(--ink);border:1.5px dashed #cbbfe0;box-shadow:none;background:#faf9fc">
+  <span style="font-size:26px">📊</span>
+  <span style="flex:1"><b style="color:var(--accent)">สำหรับอาจารย์</b><br><span style="font-size:14px;color:var(--muted)">ดูสรุปว่าผู้ปกครองท่านใดส่งแล้ว / ยังไม่ส่ง และจำนวนไซส์ที่ต้องสั่ง</span></span>
+  <span style="font-size:22px;color:var(--accent)">›</span>
+</a>
 
 </div>
 <canvas id="cv" class="hide"></canvas>
