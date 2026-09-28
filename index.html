@@ -40,6 +40,17 @@ input:focus,select:focus{outline:none;border-color:var(--accent)}
 .check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-weight:600}
 .check input{width:22px;height:22px;margin-top:3px;accent-color:var(--accent)}
 .hide{display:none}
+.req{color:var(--err)}
+.pick{font-size:14px;color:var(--accent);font-weight:600;margin:10px 0 6px}
+.seg input:checked+span{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.seg input:checked+span::before{content:'✓ '}
+.missing-field .seg span,.missing-field input[type=text]{border-color:var(--err)}
+.missing-field>label.f,.missing-field .pick{color:var(--err)}
+.other-input{margin-top:8px}
+.pay label:not(.f){display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:10px;margin-top:8px;cursor:pointer;font-weight:600}
+.pay input{width:22px;height:22px;margin-top:2px;accent-color:var(--accent);flex:none}
+.pay label:not(.f):has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.missing-field.pay label:not(.f){border-color:var(--err)}
 button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;width:100%;cursor:pointer}
 .primary{background:var(--accent);color:#fff;font-size:18px;margin-top:20px}
 .primary:disabled{opacity:.6}
@@ -77,35 +88,40 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
   <h2>กรอกใบตอบรับ</h2>
   <p class="hint" style="margin-top:-4px">คืนใบตอบรับภายใน จ. 28 ก.ย. 69</p>
 
-  <label class="f">1. นักเรียนเป็น</label>
+  <div id="fGender">
+  <label class="f">1. นักเรียนเป็น <span class="req">*</span></label>
   <div class="seg big">
     <label><input type="radio" name="gender" value="ด.ช."><span>👦 ด.ช. (ชาย)</span></label>
     <label><input type="radio" name="gender" value="ด.ญ."><span>👧 ด.ญ. (หญิง)</span></label>
   </div>
+  </div>
 
-  <label class="f" for="student">2. ชื่อ-นามสกุลนักเรียน</label>
-  <input type="text" id="student" placeholder="ไม่ต้องใส่ ด.ช./ด.ญ." autocomplete="off">
+  <div id="fStudent"><label class="f" for="student">2. ชื่อ-นามสกุลนักเรียน <span class="req">*</span></label>
+  <input type="text" id="student" placeholder="ไม่ต้องใส่ ด.ช./ด.ญ." autocomplete="off"></div>
   <div class="row">
     <div>
       <label class="f" for="room">ชั้น</label>
       <select id="room"></select>
     </div>
-    <div>
-      <label class="f" for="no">เลขที่</label>
+    <div id="fNo">
+      <label class="f" for="no">เลขที่ <span class="req">*</span></label>
       <input type="number" id="no" inputmode="numeric" min="1" max="60" placeholder="เช่น 12">
     </div>
   </div>
 
-  <label class="f">3. ผู้ปกครอง (ข้าพเจ้า)</label>
-  <div class="seg">
-    <label><input type="radio" name="ptitle" value="นาย"><span>นาย</span></label>
-    <label><input type="radio" name="ptitle" value="นาง"><span>นาง</span></label>
-    <label><input type="radio" name="ptitle" value="นางสาว"><span>นางสาว</span></label>
+  <label class="f">3. ผู้ปกครอง (ข้าพเจ้า) <span class="req">*</span></label>
+  <div class="row">
+    <div style="flex:0 0 38%" id="fPtitle">
+      <input type="text" id="ptitle" list="titles" placeholder="คำนำหน้า" autocomplete="off">
+      <datalist id="titles"><option value="นาย"><option value="นาง"><option value="นางสาว"></datalist>
+    </div>
+    <div id="fParent"><input type="text" id="parent" placeholder="ชื่อ-นามสกุล" autocomplete="off"></div>
   </div>
-  <input type="text" id="parent" placeholder="ชื่อ-นามสกุลผู้ปกครอง" style="margin-top:8px" autocomplete="name">
+  <p class="hint">คำนำหน้าพิมพ์ได้ตามจริง เช่น นาย / นาง / นางสาว / ว่าที่ ร.ต. / ดร. / พ.ต.อ.</p>
 
   <div id="sizeBlock" class="hide">
-    <label class="f">4. ขนาดเสื้อ</label>
+    <div id="fShirt">
+    <label class="f">4. ขนาดเสื้อ <span class="req">*</span></label>
     <table class="guide">
       <tr><th>SIZE เสื้อ</th><th>รอบอก (นิ้ว)</th><th>ยาว (นิ้ว)</th></tr>
       <tr><td>XS</td><td>20</td><td>13</td></tr>
@@ -114,9 +130,13 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
       <tr><td>L</td><td>28</td><td>17</td></tr>
       <tr><td>XL</td><td>30</td><td>18</td></tr>
     </table>
+    <div class="pick">👇 กรุณาแตะเลือก 1 ขนาด (ถ้าไม่มีไซส์ที่พอดี เลือก "อื่นๆ" แล้วระบุขนาดตัว)</div>
     <div class="seg" id="shirtSeg"></div>
+    <input type="text" id="shirtOther" class="other-input hide" placeholder="ระบุ เช่น รอบอก 32 นิ้ว ยาว 20 นิ้ว">
+    </div>
 
-    <label class="f" id="pantsLabel">5. ขนาดกางเกง</label>
+    <div id="fPants">
+    <label class="f"><span id="pantsLabel">5. ขนาดกางเกง</span> <span class="req">*</span></label>
     <table class="guide" id="guideBoy">
       <tr><th>SIZE</th><th>เอว (นิ้ว)</th><th>สะโพก (นิ้ว)</th></tr>
       <tr><td>1</td><td>28-30</td><td rowspan="5">Free size</td></tr>
@@ -131,11 +151,18 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
       <tr><td>2</td><td>29-31</td><td>35</td></tr>
       <tr><td>3</td><td>31-32</td><td>36</td></tr>
     </table>
+    <div class="pick">👇 กรุณาแตะเลือก 1 ขนาด (ถ้าไม่มีไซส์ที่พอดี เลือก "อื่นๆ" แล้วระบุขนาดตัว)</div>
     <div class="seg" id="pantsSeg"></div>
+    <input type="text" id="pantsOther" class="other-input hide" placeholder="ระบุ เช่น เอว 36 นิ้ว สะโพก 40 นิ้ว">
+    </div>
   </div>
   <p class="hint" id="genderHint">เลือก ด.ช./ด.ญ. ก่อน แล้วตัวเลือกไซส์จะแสดงขึ้นมา</p>
 
-  <label class="check"><input type="checkbox" id="ack"><span>รับทราบและได้แนบเงิน 400 บาทมาด้วยแล้ว</span></label>
+  <div id="fPay" class="pay">
+    <label class="f">6. ค่าชุดการแสดง 400 บาท <span class="req">*</span></label>
+    <label><input type="radio" name="pay" value="later"><span>รับทราบ และจะให้นักเรียนนำเงิน 400 บาทมาส่งในวันเปิดเทอม</span></label>
+    <label><input type="radio" name="pay" value="paid"><span>รับทราบ และได้ชำระเงิน 400 บาทให้อาจารย์เรียบร้อยแล้ว</span></label>
+  </div>
 
   <div id="err" class="error"></div>
   <button type="submit" class="primary" id="submitBtn">ส่งและสร้างรูปใบตอบรับ</button>
@@ -154,17 +181,19 @@ button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px;wid
 </div>
 <canvas id="cv" class="hide"></canvas>
 
+<script src="config.js"></script>
 <script>
 // ===== ตั้งค่า =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbyQnBdDxTuNGIOyr2j9R6GQOjSrkO9c_uvzJlGYde9IgYhOnufm8Be_OqdnVa_iROeW6g/exec'; // ← วาง Web app URL จาก Apps Script ตรงนี้ (เว้นว่าง = สร้างรูปอย่างเดียว ไม่บันทึก)
+const API_URL = window.API_URL || ''; // ตั้งค่าในไฟล์ config.js
 const DEFAULT_ROOM = 7;
 const MAX_ROOM = 12;
 // ==================
 
 const $ = id => document.getElementById(id);
-const SHIRTS = ['XS','S','M','L','XL'];
-const BOY_PANTS = ['1','2','3','4','5'];
-const GIRL_PANTS = ['1','2','3'];
+const OTHER = 'อื่นๆ';
+const SHIRTS = ['XS','S','M','L','XL',OTHER];
+const BOY_PANTS = ['1','2','3','4','5',OTHER];
+const GIRL_PANTS = ['1','2','3',OTHER];
 
 for (let i = 1; i <= MAX_ROOM; i++) {
   const o = document.createElement('option');
@@ -173,6 +202,19 @@ for (let i = 1; i <= MAX_ROOM; i++) {
 }
 const segHTML = (name, arr) => arr.map(v => `<label><input type="radio" name="${name}" value="${v}"><span>${v}</span></label>`).join('');
 $('shirtSeg').innerHTML = segHTML('shirt', SHIRTS);
+function wireOther(name, inputId) {
+  document.addEventListener('change', e => {
+    if (e.target.name !== name) return;
+    const on = e.target.value === OTHER;
+    $(inputId).classList.toggle('hide', !on);
+    if (on) $(inputId).focus();
+  });
+}
+wireOther('shirt', 'shirtOther'); wireOther('pants', 'pantsOther');
+document.addEventListener('input', () => $('err').textContent = '');
+document.addEventListener('change', () => $('err').textContent = '');
+document.addEventListener('input', e => { const f = e.target.closest('.missing-field'); if (f) f.classList.remove('missing-field'); });
+document.addEventListener('change', e => { const f = e.target.closest('.missing-field'); if (f) f.classList.remove('missing-field'); });
 
 document.querySelectorAll('input[name=gender]').forEach(r => r.addEventListener('change', () => {
   const boy = r.value === 'ด.ช.';
@@ -182,33 +224,39 @@ document.querySelectorAll('input[name=gender]').forEach(r => r.addEventListener(
   $('guideGirl').classList.toggle('hide', boy);
   $('pantsLabel').textContent = boy ? '5. ขนาดกางเกงยีนส์ขาสั้น (ผู้ชาย)' : '5. ขนาดกางเกงยีนส์ขายาว (ผู้หญิง)';
   $('pantsSeg').innerHTML = segHTML('pants', boy ? BOY_PANTS : GIRL_PANTS);
+  $('pantsOther').classList.add('hide'); $('pantsOther').value = '';
 }));
 
 const val = name => (document.querySelector(`input[name=${name}]:checked`) || {}).value || '';
 
+const sizeVal = (name, otherId) => { const v = val(name); return v === OTHER ? $(otherId).value.trim() : v; };
 function collect() {
   return {
     gender: val('gender'),
     student: $('student').value.trim().replace(/^(ด\.?\s?ช\.?|ด\.?\s?ญ\.?|เด็กชาย|เด็กหญิง)\s*/, ''),
     room: $('room').value,
     no: $('no').value.trim(),
-    parentTitle: val('ptitle'),
-    parent: $('parent').value.trim().replace(/^(นาย|นางสาว|นาง)\s*/, ''),
-    shirt: val('shirt'),
-    pants: val('pants'),
-    ack: $('ack').checked
+    parentTitle: $('ptitle').value.trim(),
+    parent: $('parent').value.trim(),
+    shirt: sizeVal('shirt', 'shirtOther'),
+    pants: sizeVal('pants', 'pantsOther'),
+    ack: !!val('pay'),
+    pay: val('pay') === 'paid' ? 'ชำระแล้ว' : val('pay') === 'later' ? 'นำมาวันเปิดเทอม' : ''
   };
 }
 function validate(d) {
-  const miss = [];
-  if (!d.gender) miss.push('เพศนักเรียน');
-  if (!d.student) miss.push('ชื่อนักเรียน');
-  if (!d.no) miss.push('เลขที่');
-  if (!d.parentTitle) miss.push('คำนำหน้าผู้ปกครอง');
-  if (!d.parent) miss.push('ชื่อผู้ปกครอง');
-  if (!d.shirt) miss.push('ขนาดเสื้อ');
-  if (!d.pants) miss.push('ขนาดกางเกง');
-  return miss;
+  const checks = [
+    [!d.gender, 'fGender', 'เพศนักเรียน'], [!d.student, 'fStudent', 'ชื่อนักเรียน'], [!d.no, 'fNo', 'เลขที่'],
+    [!d.parentTitle, 'fPtitle', 'คำนำหน้าผู้ปกครอง'], [!d.parent, 'fParent', 'ชื่อผู้ปกครอง'],
+    [d.gender && !d.shirt, 'fShirt', val('shirt') === OTHER ? 'ระบุขนาดเสื้อ' : 'ขนาดเสื้อ'],
+    [d.gender && !d.pants, 'fPants', val('pants') === OTHER ? 'ระบุขนาดกางเกง' : 'ขนาดกางเกง'],
+    [!d.pay, 'fPay', 'เรื่องค่าชุด (ข้อ 6)']
+  ];
+  document.querySelectorAll('.missing-field').forEach(el => el.classList.remove('missing-field'));
+  const miss = checks.filter(c => c[0]);
+  miss.forEach(c => $(c[1]).classList.add('missing-field'));
+  if (miss.length) $(miss[0][1]).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return miss.map(c => c[2]);
 }
 
 // ================= วาดใบตอบรับ =================
@@ -227,7 +275,8 @@ function t(s, x, y, o = {}) {
 }
 function hand(s, x, y, o = {}) {
   if (!s) return;
-  const { size = 34, align = 'left', rot = -0.012 } = o;
+  let { size = 34, align = 'left', rot = -0.012, maxW = 0 } = o;
+  if (maxW) { ctx.font = `${size}px "${HAND}"`; const w = ctx.measureText(s).width; if (w > maxW) size = Math.max(18, size * maxW / w); }
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
   t(s, 0, 0, { size, font: HAND, color: BLUE, align });
   ctx.restore();
@@ -270,8 +319,9 @@ function drawForm(d) {
   // ข้าพเจ้า
   const l2 = runs(['ข้าพเจ้า (', 'นาย', ' / ', 'นาง', ' / ', 'นางสาว', ')'], 207, 303);
   dots(l2.end, 1320, 303);
-  if (d.parentTitle) circleWord(l2.pos[d.parentTitle].x, l2.pos[d.parentTitle].w, 303);
-  hand(d.parent, l2.end + 30, 296);
+  const std = ['นาย', 'นาง', 'นางสาว'].includes(d.parentTitle);
+  if (std) circleWord(l2.pos[d.parentTitle].x, l2.pos[d.parentTitle].w, 303);
+  hand(std ? d.parent : `${d.parentTitle} ${d.parent}`, l2.end + 30, 296, { maxW: 1320 - l2.end - 40 });
 
   // ผู้ปกครองของ
   const l3 = runs(['ผู้ปกครองของ (', 'ด.ญ.', '/', 'ด.ช.', ')'], 207, 360);
@@ -281,7 +331,7 @@ function drawForm(d) {
   const w2 = t('เลขที่', roomX2, 360);
   dots(roomX2 + w2, 1320, 360);
   if (d.gender) circleWord(l3.pos[d.gender].x, l3.pos[d.gender].w, 360);
-  hand(d.student, l3.end + 30, 353);
+  hand(d.student, l3.end + 30, 353, { maxW: 1040 - l3.end - 40 });
   hand(String(d.room), (roomX1 + roomX2) / 2, 353, { align: 'center' });
   hand(String(d.no), (roomX2 + w2 + 1320) / 2, 353, { align: 'center' });
 
@@ -294,6 +344,8 @@ function drawForm(d) {
   }
   // โน้ตอาจารย์ (มีอยู่บนใบต้นฉบับ)
   hand('คืนใบตอบรับ  ภายใน จ. 28 ก.ย. 69', 755, 410, { size: 32, rot: -0.01 });
+  if (d.pay === 'นำมาวันเปิดเทอม') hand('* นักเรียนจะนำเงิน 400 บาทมาส่งในวันเปิดเทอม', 243, 462, { size: 30, rot: -0.008 });
+  ctx.translate(0, 40);
 
   // ตารางกรอกไซส์
   t('ผู้ปกครองกรอกข้อมูลขนาดเสื้อ กางเกง/กระโปรงตามที่ต้องการ', 213, 482, { weight: 700, size: 28 });
@@ -304,9 +356,9 @@ function drawForm(d) {
   center('ขนาดเสื้อ', 500, 626);
   center('ขนาดกางเกงขาสั้น (ชาย)', 500, 677, { size: 25 });
   center('ขนาดกางเกงขายาว (หญิง)', 500, 726, { size: 25 });
-  hand(d.shirt, 1071, 627, { align: 'center' });
-  if (d.gender === 'ด.ช.') hand(d.pants, 1071, 678, { align: 'center' });
-  if (d.gender === 'ด.ญ.') hand(d.pants, 1071, 727, { align: 'center' });
+  hand(d.shirt, 1071, 627, { align: 'center', maxW: 540 });
+  if (d.gender === 'ด.ช.') hand(d.pants, 1071, 678, { align: 'center', maxW: 540 });
+  if (d.gender === 'ด.ญ.') hand(d.pants, 1071, 727, { align: 'center', maxW: 540 });
 
   // ขนาดเสื้อ
   t('ขนาดเสื้อ', 220, 817, { weight: 700, size: 27 });

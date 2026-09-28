@@ -45,8 +45,9 @@ td.l{text-align:left}
   <div id="msg"></div>
   <div id="out"></div>
 </div>
+<script src="config.js"></script>
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyQnBdDxTuNGIOyr2j9R6GQOjSrkO9c_uvzJlGYde9IgYhOnufm8Be_OqdnVa_iROeW6g/exec'; // ← วาง Web app URL เดียวกับหน้าฟอร์ม
+const API_URL = window.API_URL || ''; // ตั้งค่าในไฟล์ config.js
 const DEFAULT_ROOM = 7, MAX_ROOM = 12;
 
 const $ = id => document.getElementById(id);
@@ -64,7 +65,7 @@ async function load() {
   } catch (e) { $('msg').innerHTML = `<div class="card err">โหลดไม่สำเร็จ: ${e.message}</div>`; }
 }
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function countBy(rows, f, keys) { const m = Object.fromEntries(keys.map(k => [k, 0])); rows.forEach(r => { const k = f(r); if (k in m) m[k]++; }); return m; }
+function countBy(rows, f, keys) { const m = Object.fromEntries([...keys, 'อื่นๆ'].map(k => [k, 0])); rows.forEach(r => { const k = String(f(r) ?? ''); if (k in m) m[k]++; else if (k) m['อื่นๆ']++; }); return m; }
 function cntTable(title, m) {
   return `<div><b>${title}</b><table><tr><th>ไซส์</th><th>จำนวน</th></tr>${Object.entries(m).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}<tr><th>รวม</th><th>${Object.values(m).reduce((a, b) => a + b, 0)}</th></tr></table></div>`;
 }
@@ -80,29 +81,33 @@ function render() {
   const shirt = countBy(rows, r => r.shirt, ['XS', 'S', 'M', 'L', 'XL']);
   const shorts = countBy(boys, r => r.pants, ['1', '2', '3', '4', '5']);
   const long = countBy(girls, r => r.pants, ['1', '2', '3']);
-  const noAck = rows.filter(r => !r.ack).map(r => r.no);
+  const later = rows.filter(r => r.pay !== 'ชำระแล้ว');
+  const others = rows.filter(r => !['XS','S','M','L','XL'].includes(String(r.shirt)) || !['1','2','3','4','5'].includes(String(r.pants)));
 
   $('out').innerHTML = `
   <div class="card"><div class="stats">
     <div class="stat"><b>${rows.length}/${total}</b>ส่งแล้ว</div>
     <div class="stat"><b>${boys.length}</b>ชาย</div>
     <div class="stat"><b>${girls.length}</b>หญิง</div>
-    <div class="stat"><b>${noAck.length}</b>ยังไม่ติ๊กแนบเงิน</div>
+    <div class="stat"><b>${later.length}</b>นำเงินมาวันเปิดเทอม</div>
   </div></div>
   <div class="card"><h2>ยังไม่ส่ง (เลขที่)</h2><div class="missing">${missing.length ? missing.join(', ') : 'ส่งครบแล้ว 🎉'}</div></div>
   <div class="card"><h2>สรุปจำนวนตามไซส์</h2><div class="cnt">
     ${cntTable('เสื้อ', shirt)}${cntTable('กางเกงขาสั้น (ชาย)', shorts)}${cntTable('กางเกงขายาว (หญิง)', long)}
   </div></div>
+  ${others.length ? `<div class="card"><h2>ไซส์พิเศษ (ระบุเอง)</h2><table><tr><th>เลขที่</th><th>ชื่อ</th><th>เสื้อ</th><th>กางเกง</th></tr>${others.map(r => `<tr><td>${r.no}</td><td class="l">${esc(r.student)}</td><td>${esc(r.shirt)}</td><td>${esc(r.pants)}</td></tr>`).join('')}</table></div>` : ''}
   <div class="card"><h2>รายชื่อ</h2><div class="scroll"><table>
-    <tr><th>เลขที่</th><th>ชื่อนักเรียน</th><th>เสื้อ</th><th>กางเกง</th><th>ผู้ปกครอง</th><th>แนบเงิน</th><th>ส่งเมื่อ</th></tr>
+    <tr><th>เลขที่</th><th>ชื่อนักเรียน</th><th>เสื้อ</th><th>กางเกง</th><th>ผู้ปกครอง</th><th>ค่าชุด</th><th>ส่งเมื่อ</th></tr>
     ${rows.map(r => `<tr><td>${r.no}</td><td class="l">${esc(r.gender)} ${esc(r.student)}</td><td>${esc(r.shirt)}</td>
-      <td>${r.gender === 'ด.ช.' ? 'ขาสั้น ' : 'ขายาว '}${esc(r.pants)}</td><td class="l">${esc(r.parentTitle)}${esc(r.parent)}</td>
-      <td>${r.ack ? '✓' : '-'}</td><td>${new Date(r.ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}${r.times > 1 ? `<div class="edited">แก้ไข ${r.times - 1} ครั้ง</div>` : ''}</td></tr>`).join('')}
+      <td>${r.gender === 'ด.ช.' ? 'ขาสั้น ' : 'ขายาว '}${esc(r.pants)}</td><td class="l">${esc(r.parentTitle)} ${esc(r.parent)}</td>
+      <td>${esc(r.pay || (r.ack ? '✓' : '-'))}</td><td>${new Date(r.ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}${r.times > 1 ? `<div class="edited">แก้ไข ${r.times - 1} ครั้ง</div>` : ''}</td></tr>`).join('')}
   </table></div></div>`;
 
   const fmt = m => Object.entries(m).map(([k, v]) => `${k}=${v}`).join(' ');
   lastText = `สรุปใบตอบรับชุดงานประจำปี ป.4/${room}\nส่งแล้ว ${rows.length}/${total} (ชาย ${boys.length} หญิง ${girls.length})\n` +
-    `ยังไม่ส่ง เลขที่: ${missing.join(', ') || '-'}\nเสื้อ: ${fmt(shirt)}\nกางเกงขาสั้น(ชาย): ${fmt(shorts)}\nกางเกงขายาว(หญิง): ${fmt(long)}`;
+    `ยังไม่ส่ง เลขที่: ${missing.join(', ') || '-'}\nเสื้อ: ${fmt(shirt)}\nกางเกงขาสั้น(ชาย): ${fmt(shorts)}\nกางเกงขายาว(หญิง): ${fmt(long)}` +
+    (others.length ? `\nไซส์พิเศษ: ${others.map(r => `เลขที่ ${r.no} เสื้อ ${r.shirt} กางเกง ${r.pants}`).join(' / ')}` : '') +
+    `\nนำเงินมาวันเปิดเทอม: ${later.length} คน`;
 }
 $('room').onchange = render; $('total').oninput = render; $('reload').onclick = load;
 $('copy').onclick = async () => { try { await navigator.clipboard.writeText(lastText); $('copy').textContent = '✅ คัดลอกแล้ว'; setTimeout(() => $('copy').textContent = '📋 คัดลอกสรุปส่งไลน์', 1500); } catch (e) { prompt('คัดลอกข้อความนี้', lastText); } };
