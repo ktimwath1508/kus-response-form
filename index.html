@@ -6,7 +6,7 @@
 <title>ใบตอบรับ ค่าชุดงานประจำปี ป.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Mali:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Niramit:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#1c1c1c;--muted:#6b6b6b;--line:#e2e2e8;--bg:#f5f4f9;--card:#fff;--accent:#4b2a86;--accent-soft:#efe9f8;--blue:#1f3a93;--err:#c62828}
 *{box-sizing:border-box}
@@ -263,7 +263,7 @@ function validate(d) {
 // ระบบพิกัดอ้างอิงจากรูปต้นฉบับ (กว้าง 1539) แล้วขยายเป็น A4 200dpi (1654 x 2339)
 const BASE_W = 1539, BASE_H = 2176, OUT_W = 1654, OUT_H = 2339;
 const INK = '#111', BLUE = '#1f3a93';
-const PRINT = 'Sarabun', HAND = 'Mali';
+const PRINT = 'Sarabun', HAND = 'Niramit';
 let ctx;
 
 function t(s, x, y, o = {}) {
@@ -279,25 +279,20 @@ function clusters(s) {
   try { return [...new Intl.Segmenter('th', { granularity: 'grapheme' }).segment(s)].map(x => x.segment); }
   catch (e) { return s.match(/.[ัิ-ฺ็-๎]*/gu) || [s]; }
 }
+let PEN = { tilt: -0.01, scale: 1, slant: -0.08 }; // สุ่มต่อผู้ปกครอง ให้แต่ละใบต่างกันเล็กน้อย
+function setPen(seed) { const r = rng(seed); PEN = { tilt: -0.02 + r() * 0.025, scale: 0.95 + r() * 0.1, slant: -0.12 + r() * 0.1 }; }
 function hand(s, x, y, o = {}) {
   if (!s) return;
   s = String(s);
-  let { size = 35, align = 'left', rot = -0.01, maxW = 0 } = o;
+  let { size = 36, align = 'left', maxW = 0 } = o;
+  size *= PEN.scale;
   const font = sz => `500 ${sz}px "${HAND}"`;
   ctx.font = font(size);
-  let w = ctx.measureText(s).width * 1.03;
-  if (maxW && w > maxW) { size = Math.max(18, size * maxW / w); ctx.font = font(size); w = ctx.measureText(s).width * 1.03; }
-  const r = rng(s + x + y);
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.transform(1, 0, -0.1, 1, 0, 0);
-  let cx = align === 'center' ? -w / 2 : 0;
-  ctx.fillStyle = BLUE; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  for (const c of clusters(s)) {
-    const cw = ctx.measureText(c).width;
-    ctx.save(); ctx.translate(cx, (r() - 0.5) * size * 0.07); ctx.rotate((r() - 0.5) * 0.05);
-    ctx.font = font(size * (0.97 + r() * 0.06));
-    ctx.fillText(c, 0, 0); ctx.restore(); ctx.font = font(size);
-    cx += cw * (0.96 + r() * 0.04);
-  }
+  let w = ctx.measureText(s).width;
+  if (maxW && w > maxW) { size = Math.max(18, size * maxW / w); ctx.font = font(size); }
+  ctx.save(); ctx.translate(x, y); ctx.rotate(PEN.tilt); ctx.transform(1, 0, PEN.slant, 1, 0, 0);
+  ctx.fillStyle = BLUE; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(s, 0, 0);
   ctx.restore();
 }
 function dots(x1, x2, y) {
@@ -326,6 +321,7 @@ function runs(parts, x, y) {
 function center(s, x, y, o) { return t(s, x, y, { ...o, align: 'center' }); }
 
 function drawForm(d) {
+  setPen(d.parent + d.student);
   const cv = $('cv');
   cv.width = OUT_W; cv.height = OUT_H;
   ctx = cv.getContext('2d');
