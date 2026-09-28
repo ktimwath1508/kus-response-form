@@ -39,8 +39,10 @@ td.l{text-align:left}
   <div class="card controls">
     <div><label>ห้อง<select id="room"></select></label></div>
     <div><label>จำนวนนักเรียน<input type="number" id="total" value="40" style="width:90px"></label></div>
-    <button id="reload">🔄 โหลดใหม่</button>
-    <button class="sec" id="copy">📋 คัดลอกสรุปส่งไลน์</button>
+    <button id="reload">🔄 รีเฟรชข้อมูล</button>
+    <button class="sec" id="copy">📋 คัดลอกเลขที่ที่ยังไม่ส่ง (ไว้ส่งกลุ่มไลน์)</button>
+    <a href="./" style="margin-left:auto;align-self:center;color:var(--accent);font-weight:600">← กลับหน้าฟอร์ม</a>
+    <div id="upd" style="width:100%;font-size:13px;color:#6b6b6b"></div>
   </div>
   <div id="msg"></div>
   <div id="out"></div>
@@ -51,17 +53,18 @@ const API_URL = window.API_URL || ''; // ตั้งค่าในไฟล์
 const DEFAULT_ROOM = 7, MAX_ROOM = 9;
 
 const $ = id => document.getElementById(id);
-const key = new URLSearchParams(location.search).get('key') || '';
+const key = new URLSearchParams(location.search).get('key') || window.ADMIN_KEY || '';
 for (let i = 1; i <= MAX_ROOM; i++) $('room').insertAdjacentHTML('beforeend', `<option value="${i}" ${i === DEFAULT_ROOM ? 'selected' : ''}>ป.4/${i}</option>`);
 
 let all = [], lastText = '';
-async function load() {
-  $('msg').innerHTML = '<div class="card">กำลังโหลด...</div>';
+async function load(silent) {
+  if (!silent) $('msg').innerHTML = '<div class="card">กำลังโหลด...</div>';
   try {
     const r = await fetch(API_URL + '?key=' + encodeURIComponent(key));
     const j = await r.json();
     if (!j.ok) throw new Error(j.error === 'unauthorized' ? 'ลิงก์ไม่ถูกต้อง (key ผิด)' : j.error);
     all = j.rows; $('msg').innerHTML = ''; render();
+    $('upd').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น. (รีเฟรชเองทุก 1 นาที)';
   } catch (e) { $('msg').innerHTML = `<div class="card err">โหลดไม่สำเร็จ: ${e.message}</div>`; }
 }
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -103,15 +106,15 @@ function render() {
       <td>${esc(r.pay || (r.ack ? '✓' : '-'))}</td><td>${new Date(r.ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}${r.times > 1 ? `<div class="edited">แก้ไข ${r.times - 1} ครั้ง</div>` : ''}</td></tr>`).join('')}
   </table></div></div>`;
 
-  const fmt = m => Object.entries(m).map(([k, v]) => `${k}=${v}`).join(' ');
-  lastText = `สรุปใบตอบรับชุดงานประจำปี ป.4/${room}\nส่งแล้ว ${rows.length}/${total} (ชาย ${boys.length} หญิง ${girls.length})\n` +
-    `ยังไม่ส่ง เลขที่: ${missing.join(', ') || '-'}\nเสื้อ: ${fmt(shirt)}\nกางเกงขาสั้น(ชาย): ${fmt(shorts)}\nกางเกงขายาว(หญิง): ${fmt(long)}` +
-    (others.length ? `\nไซส์พิเศษ: ${others.map(r => `เลขที่ ${r.no} เสื้อ ${r.shirt} กางเกง ${r.pants}`).join(' / ')}` : '') +
-    `\nนำเงินมาวันเปิดเทอม: ${later.length} คน`;
+  const formUrl = location.href.split('summary.html')[0];
+  lastText = missing.length
+    ? `📢 ใบตอบรับชุดงานประจำปี ป.4/${room}\nยังไม่ได้ส่ง เลขที่: ${missing.join(', ')}\nรบกวนผู้ปกครองกรอกที่ลิงก์นี้ 🙏\n${formUrl}`
+    : `📢 ใบตอบรับชุดงานประจำปี ป.4/${room}\nส่งครบทุกคนแล้ว ขอบคุณผู้ปกครองทุกท่าน 🙏`;
 }
-$('room').onchange = render; $('total').oninput = render; $('reload').onclick = load;
-$('copy').onclick = async () => { try { await navigator.clipboard.writeText(lastText); $('copy').textContent = '✅ คัดลอกแล้ว'; setTimeout(() => $('copy').textContent = '📋 คัดลอกสรุปส่งไลน์', 1500); } catch (e) { prompt('คัดลอกข้อความนี้', lastText); } };
+$('room').onchange = render; $('total').oninput = render; $('reload').onclick = () => load();
+$('copy').onclick = async () => { try { await navigator.clipboard.writeText(lastText); $('copy').textContent = '✅ คัดลอกแล้ว'; setTimeout(() => $('copy').textContent = '📋 คัดลอกเลขที่ที่ยังไม่ส่ง (ไว้ส่งกลุ่มไลน์)', 1500); } catch (e) { prompt('คัดลอกข้อความนี้', lastText); } };
 load();
+setInterval(() => load(true), 60000);
 </script>
 </body>
 </html>
