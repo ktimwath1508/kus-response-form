@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สรุปใบตอบรับ ค่าชุดงานประจำปี ป.4</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#4b2a86;--soft:#efe9f8;--line:#e2e2e8;--bg:#f5f4f9;--err:#c62828}
+*{box-sizing:border-box}
+body{margin:0;font-family:Sarabun,system-ui,sans-serif;background:var(--bg);color:#1c1c1c;font-size:16px}
+header{background:var(--accent);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{margin:0 0 10px;font-size:17px;color:var(--accent)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.controls label{font-weight:600;font-size:14px}
+select,input{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;display:block;margin-top:4px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:#fff;cursor:pointer}
+button.sec{background:var(--soft);color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:28px;color:var(--accent)}
+.missing{color:var(--err);font-weight:700;font-size:18px;word-break:break-word}
+.cnt{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #d8d8e0;padding:6px 8px;text-align:center}
+th{background:#f3f1f8}
+td.l{text-align:left}
+.scroll{overflow-x:auto}
+.edited{color:#8a6d00;font-size:13px}
+.err{color:var(--err);font-weight:600}
+</style>
+</head>
+<body>
+<header><h1>สรุปใบตอบรับ ค่าชุดงานประจำปี ป.4</h1></header>
+<div class="wrap">
+  <div class="card controls">
+    <div><label>ห้อง<select id="room"></select></label></div>
+    <div><label>จำนวนนักเรียน<input type="number" id="total" value="40" style="width:90px"></label></div>
+    <button id="reload">🔄 โหลดใหม่</button>
+    <button class="sec" id="copy">📋 คัดลอกสรุปส่งไลน์</button>
+  </div>
+  <div id="msg"></div>
+  <div id="out"></div>
+</div>
+<script>
+const API_URL = ''; // ← วาง Web app URL เดียวกับหน้าฟอร์ม
+const DEFAULT_ROOM = 7, MAX_ROOM = 12;
+
+const $ = id => document.getElementById(id);
+const key = new URLSearchParams(location.search).get('key') || '';
+for (let i = 1; i <= MAX_ROOM; i++) $('room').insertAdjacentHTML('beforeend', `<option value="${i}" ${i === DEFAULT_ROOM ? 'selected' : ''}>ป.4/${i}</option>`);
+
+let all = [], lastText = '';
+async function load() {
+  $('msg').innerHTML = '<div class="card">กำลังโหลด...</div>';
+  try {
+    const r = await fetch(API_URL + '?key=' + encodeURIComponent(key));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error === 'unauthorized' ? 'ลิงก์ไม่ถูกต้อง (key ผิด)' : j.error);
+    all = j.rows; $('msg').innerHTML = ''; render();
+  } catch (e) { $('msg').innerHTML = `<div class="card err">โหลดไม่สำเร็จ: ${e.message}</div>`; }
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function countBy(rows, f, keys) { const m = Object.fromEntries(keys.map(k => [k, 0])); rows.forEach(r => { const k = f(r); if (k in m) m[k]++; }); return m; }
+function cntTable(title, m) {
+  return `<div><b>${title}</b><table><tr><th>ไซส์</th><th>จำนวน</th></tr>${Object.entries(m).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}<tr><th>รวม</th><th>${Object.values(m).reduce((a, b) => a + b, 0)}</th></tr></table></div>`;
+}
+function render() {
+  const room = Number($('room').value), total = Number($('total').value) || 0;
+  // เก็บรายการล่าสุดของแต่ละเลขที่ (กรณีผปค.ส่งซ้ำ/แก้ไข)
+  const byNo = {};
+  all.filter(r => Number(r.room) === room).sort((a, b) => new Date(a.ts) - new Date(b.ts))
+     .forEach(r => { const k = Number(r.no); byNo[k] = { ...r, times: (byNo[k]?.times || 0) + 1 }; });
+  const rows = Object.values(byNo).sort((a, b) => a.no - b.no);
+  const missing = []; for (let i = 1; i <= total; i++) if (!byNo[i]) missing.push(i);
+  const boys = rows.filter(r => r.gender === 'ด.ช.'), girls = rows.filter(r => r.gender === 'ด.ญ.');
+  const shirt = countBy(rows, r => r.shirt, ['XS', 'S', 'M', 'L', 'XL']);
+  const shorts = countBy(boys, r => r.pants, ['1', '2', '3', '4', '5']);
+  const long = countBy(girls, r => r.pants, ['1', '2', '3']);
+  const noAck = rows.filter(r => !r.ack).map(r => r.no);
+
+  $('out').innerHTML = `
+  <div class="card"><div class="stats">
+    <div class="stat"><b>${rows.length}/${total}</b>ส่งแล้ว</div>
+    <div class="stat"><b>${boys.length}</b>ชาย</div>
+    <div class="stat"><b>${girls.length}</b>หญิง</div>
+    <div class="stat"><b>${noAck.length}</b>ยังไม่ติ๊กแนบเงิน</div>
+  </div></div>
+  <div class="card"><h2>ยังไม่ส่ง (เลขที่)</h2><div class="missing">${missing.length ? missing.join(', ') : 'ส่งครบแล้ว 🎉'}</div></div>
+  <div class="card"><h2>สรุปจำนวนตามไซส์</h2><div class="cnt">
+    ${cntTable('เสื้อ', shirt)}${cntTable('กางเกงขาสั้น (ชาย)', shorts)}${cntTable('กางเกงขายาว (หญิง)', long)}
+  </div></div>
+  <div class="card"><h2>รายชื่อ</h2><div class="scroll"><table>
+    <tr><th>เลขที่</th><th>ชื่อนักเรียน</th><th>เสื้อ</th><th>กางเกง</th><th>ผู้ปกครอง</th><th>แนบเงิน</th><th>ส่งเมื่อ</th></tr>
+    ${rows.map(r => `<tr><td>${r.no}</td><td class="l">${esc(r.gender)} ${esc(r.student)}</td><td>${esc(r.shirt)}</td>
+      <td>${r.gender === 'ด.ช.' ? 'ขาสั้น ' : 'ขายาว '}${esc(r.pants)}</td><td class="l">${esc(r.parentTitle)}${esc(r.parent)}</td>
+      <td>${r.ack ? '✓' : '-'}</td><td>${new Date(r.ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}${r.times > 1 ? `<div class="edited">แก้ไข ${r.times - 1} ครั้ง</div>` : ''}</td></tr>`).join('')}
+  </table></div></div>`;
+
+  const fmt = m => Object.entries(m).map(([k, v]) => `${k}=${v}`).join(' ');
+  lastText = `สรุปใบตอบรับชุดงานประจำปี ป.4/${room}\nส่งแล้ว ${rows.length}/${total} (ชาย ${boys.length} หญิง ${girls.length})\n` +
+    `ยังไม่ส่ง เลขที่: ${missing.join(', ') || '-'}\nเสื้อ: ${fmt(shirt)}\nกางเกงขาสั้น(ชาย): ${fmt(shorts)}\nกางเกงขายาว(หญิง): ${fmt(long)}`;
+}
+$('room').onchange = render; $('total').oninput = render; $('reload').onclick = load;
+$('copy').onclick = async () => { try { await navigator.clipboard.writeText(lastText); $('copy').textContent = '✅ คัดลอกแล้ว'; setTimeout(() => $('copy').textContent = '📋 คัดลอกสรุปส่งไลน์', 1500); } catch (e) { prompt('คัดลอกข้อความนี้', lastText); } };
+load();
+</script>
+</body>
+</html>
